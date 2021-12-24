@@ -1,4 +1,7 @@
-if set -q WAYLAND_DISPLAY
+if set -q KITTY_PID || set -q KITTY_WINDOW_ID
+    command -sq kitty
+    or echo 'cwcr: you need to install kitty'
+else if set -q WAYLAND_DISPLAY
     command -sq wl-copy wl-paste
     or echo 'cwcr: you need to install wl-clipboard'
 else if set -q DISPLAY
@@ -7,7 +10,6 @@ else if set -q DISPLAY
 end
 
 function __cwcr
-
     set cmd
     switch $argv[1]
         case 'cw'; set cmd 'cw'
@@ -15,7 +17,12 @@ function __cwcr
         case '*';  return 1
     end
 
-    if set -q WAYLAND_DISPLAY
+    if set -q KITTY_PID || set -q KITTY_WINDOW_ID
+        switch $cmd
+            case 'cw'; __cwcr_trim_last_newline | kitty +kitten clipboard
+            case 'cr'; kitty +kitten clipboard --get-clipboard
+        end
+    else if set -q WAYLAND_DISPLAY
         switch $cmd
             case 'cw'; wl-copy -n
             case 'cr'; wl-paste
